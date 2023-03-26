@@ -1,0 +1,15 @@
+(executable
+ (public_name serverapp)
+ (name server)
+ (modules server)
+ (libraries unix)
+ (flags
+  (-w -33)))
+
+(executable
+ (public_name clientapp)
+ (name client)
+ (modules client)
+ (libraries unix)
+ (flags
+  (-w -26)))

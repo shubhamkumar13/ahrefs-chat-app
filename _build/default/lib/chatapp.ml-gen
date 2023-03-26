@@ -1,0 +1,2 @@
+(** @canonical Chatapp.Chat *)
+module Chat = Chatapp__Chat
