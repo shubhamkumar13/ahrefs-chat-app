@@ -1,4 +1,0 @@
-(lang dune 3.2)
-(name chatapp)
-(sections (lib .) (bin ../../bin))
-(files (lib (META dune-package opam)) (bin (clientapp serverapp)))
