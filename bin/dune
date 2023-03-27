@@ -2,7 +2,7 @@
  (public_name serverapp)
  (name server)
  (modules server)
- (libraries unix)
+ (libraries unix lwt lwt.unix)
  (flags
   (-w -33)))
 
@@ -10,6 +10,6 @@
  (public_name clientapp)
  (name client)
  (modules client)
- (libraries unix)
+ (libraries unix lwt lwt.unix)
  (flags
   (-w -26)))

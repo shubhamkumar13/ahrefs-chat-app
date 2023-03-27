@@ -1,41 +1,40 @@
-let client_socket = Unix.socket PF_INET SOCK_STREAM 0
-let host = "127.0.0.1"
-let port = 9999
+open Lwt
+open Lwt.Syntax
+
+let port = 8080
+let client_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
+
+let client_addr () =
+  Lwt_unix.(connect client_socket @@ ADDR_INET (Unix.inet_addr_any, port))
 
 let start_client () =
-  Unix.(connect client_socket @@ ADDR_INET (inet_addr_of_string host, port))
-  |> fun _ ->
-  Printf.printf "Connected to server on port %d\n" port;
-  flush stdout;
-  let rec alive () =
-    Printf.printf "Enter message: ";
-    flush stdout;
-    let send_msg = Bytes.of_string @@ Stdlib.read_line () in
-    (* let start_time = Unix.gettimeofday () in *)
-    let send_size =
-      Unix.send client_socket send_msg 0 (Bytes.length send_msg) []
-    in
-    let recv_ack = Bytes.create 1024 in
-    let _ = Unix.recv client_socket recv_ack 0 1024 [] in
-    Printf.printf "Response: %s\n" @@ Bytes.to_string recv_ack;
-    flush stdout;
-    (* let server_response = Bytes.create 1024 in
-       let recv_size = Unix.recv client_socket server_response 0 1024 [] in *)
-    (* let end_time = Unix.gettimeofday () in *)
-    (* let roundtrip_time = end_time -. start_time in *)
-    (* let ack_size =
-         Unix.send client_socket
-           (Bytes.of_string "message received")
-           0
-           (Bytes.length @@ Bytes.of_string "message received")
-           []
-       in
-       Printf.printf "Server response : %s\n" @@ Bytes.to_string message; *)
-    (* flush stdout; *)
-    (* Printf.printf "Roundtrip time : %f seconds\n" roundtrip_time; *)
-    (* flush stdout; *)
-    if Bytes.to_string send_msg = "exit" then () else alive ()
+  let* _ = client_addr () in
+  let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in
+  let rec loop () =
+    let* input = Lwt_io.read_line_opt Lwt_io.stdin in
+    match input with
+    | Some msg ->
+        let* _ =
+          Lwt_io.(
+            write_line stdout @@ Printf.sprintf "Sending message : %s" msg)
+        in
+        let bytes_msg = Bytes.of_string msg in
+        let* _ =
+          Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
+        in
+        let buffer = Bytes.create 1024 in
+        let* len = Lwt_unix.recv client_socket buffer 0 1024 [] in
+        if len == 0 then loop ()
+        else
+          let* _ =
+            Lwt_io.(
+              write_line stdout
+              @@ Printf.sprintf "Received message: %s"
+              @@ Bytes.to_string buffer)
+          in
+          loop ()
+    | None -> Lwt_unix.close client_socket
   in
-  alive () |> fun _ -> Unix.close client_socket
+  loop ()
 
-let _ = start_client ()
+let _ = Lwt_main.run @@ start_client ()

@@ -1,58 +1,71 @@
-let server_socket = Unix.socket PF_INET SOCK_STREAM 0
-let host = "127.0.0.1"
-let port = 9999
+open Lwt
+open Lwt.Syntax
+
+let port = 8080
+let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
+
+let server_addr () =
+  Lwt_unix.(bind server_socket @@ Unix.(ADDR_INET (inet_addr_any, port)))
 
 let start_server () =
-  Unix.(bind server_socket @@ ADDR_INET (inet_addr_of_string host, port))
-  |> fun _ ->
-  Unix.(listen server_socket 1);
-  Printf.printf "Waiting for a client to connect ...\n";
-  flush stdout;
-  let client_socket, address = Unix.accept server_socket in
-  let rec alive () =
-    let send_ack = Bytes.of_string "message received" in
-    let send_ack () =
-      Unix.send client_socket send_ack 0 (Bytes.length send_ack) [] |> ignore
-    in
-    Printf.printf "Enter message: ";
-    flush stdout;
-    let send_msg =
-      let msg = Bytes.of_string @@ Stdlib.read_line () in
-      Stdlib.print_endline "";
-      close_in_noerr stdin;
-      msg
-    in
-    let recv_msg = Bytes.create 1024 in
-    let bytes_sent =
-      Unix.send client_socket send_msg 0 (Bytes.length send_msg) []
-    in
-    let bytes_recvd = Unix.recv client_socket recv_msg 0 1024 [] in
-    Printf.printf "Client Message : %s\n" @@ Bytes.to_string recv_msg;
-    flush stdout;
-    if bytes_recvd > 0 then (
-      send_ack ();
-      alive ())
-    else ()
-    (* if bytes_recvd > 0 then (
-         let server_ack = Bytes.of_string "message received" in
-         let recv_ack =
-           Unix.send client_socket server_ack 0 (Bytes.length server_ack) []
-         in
-         Printf.printf "Ack : %d\n" recv_ack;
-         Printf.printf "\nReceived message: %s\n" @@ Bytes.to_string client_message;
-         flush stdout;
-         let server_message () =
-           Printf.printf "Enter response: ";
-           Bytes.of_string @@ Stdlib.read_line ()
-         in
-         Unix.send client_socket (server_message ()) 0
-           (Bytes.length @@ server_message ())
-           []
-         |> ignore;
-         alive ())
-       else () *)
+  let* _ = server_addr () in
+  let _ = Lwt_unix.listen server_socket 10 in
+  let* _ =
+    Lwt_io.(
+      write_line stdout
+      @@ Printf.sprintf "Waiting for the socket connected : \n")
   in
-  alive () |> ignore;
-  Unix.close server_socket
+  let rec loop () =
+    let* client_socket, client_addr = Lwt_unix.accept server_socket in
+    let client_address =
+      match client_addr with
+      | ADDR_INET (i, _) -> Unix.string_of_inet_addr i
+      | ADDR_UNIX s -> s
+    in
+    let* _ =
+      Lwt_io.(
+        write_line stdout
+        @@ Printf.sprintf "Client connected : %s" client_address)
+    in
+    let rec handle_recv_client () =
+      let buffer = Bytes.create 1024 in
+      let* len = Lwt_unix.recv client_socket buffer 0 1024 [] in
+      if len = 0 then
+        let* _ = Lwt_unix.close client_socket in
+        let* _ =
+          Lwt_io.(
+            write_line stdout
+            @@ Printf.sprintf "Client disconnected: %s" client_address)
+        in
+        Lwt.return_unit
+      else
+        (* let msg = Bytes.sub (Bytes.create 1024) 0 len in *)
+        let* _ =
+          Lwt_io.(
+            write_line stdout
+            @@ Printf.sprintf "Received message : %s"
+            @@ Bytes.to_string buffer)
+        in
+        handle_recv_client ()
+    in
+    let rec handle_send_client () =
+      let* _ =
+        Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ")
+      in
+      let* input = Lwt_io.read_line_opt Lwt_io.stdin in
+      match input with
+      | Some msg ->
+          let bytes_msg = Bytes.of_string msg in
+          let* _ =
+            Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
+          in
+          handle_send_client ()
+      | None -> handle_send_client ()
+    in
+    Lwt.async handle_recv_client;
+    Lwt.async handle_send_client;
+    loop ()
+  in
+  loop ()
 
-let _ = start_server ()
+let _ = Lwt_main.run @@ start_server ()
