@@ -23,7 +23,7 @@ let rec handle_recv_client client_socket client_address =
     let* _ =
       Lwt_io.(
         write_line stdout
-        @@ Printf.sprintf "message received\nReceived message : %s"
+        @@ Printf.sprintf "Received message : %s"
         @@ Bytes.to_string buffer)
     in
     handle_send_client client_socket client_address
