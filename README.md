@@ -22,12 +22,9 @@
     Clause : 
         If there are errors while importing the packages where
         compilation errors related to `conf-gmp` and `conf-libev` 
-        might cause an issue. Install `libgmp-dev libev-dev`
-        ```bash
+        occur. 
+
         sudo apt install libgmp-dev libev-dev
-        ```
-
-
 
 # How to use this app
 
