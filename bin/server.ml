@@ -34,6 +34,9 @@ and handle_send_client client_socket client_address =
   let* input = Lwt_io.read_line_opt Lwt_io.stdin in
   match input with
   | Some msg ->
+      let* _ =
+        Lwt_io.(write_line stdout @@ Printf.sprintf "Sending message : %s" msg)
+      in
       let bytes_msg = Bytes.of_string msg in
       let* _ =
         Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
