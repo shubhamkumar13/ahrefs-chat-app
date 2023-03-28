@@ -19,10 +19,10 @@
     cd /path/to/ahrefs-chat-app
     opam sw import opam_packages.export
     ```
-    Clause : 
+    N.B. : 
         If there are errors while importing the packages where
         compilation errors related to `conf-gmp` and `conf-libev` 
-        occur. 
+        occur. Run the following commands
 
         sudo apt install libgmp-dev libev-dev
 
