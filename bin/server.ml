@@ -1,5 +1,6 @@
 open Lwt
 open Lwt.Syntax
+open Lwt.Infix
 
 let port = 8080
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
@@ -12,8 +13,7 @@ let start_server () =
   let _ = Lwt_unix.listen server_socket 10 in
   let* _ =
     Lwt_io.(
-      write_line stdout
-      @@ Printf.sprintf "Waiting for the socket connected : \n")
+      write_line stdout @@ Printf.sprintf "Waiting for the socket connected :")
   in
   let rec loop () =
     let* client_socket, client_addr = Lwt_unix.accept server_socket in
@@ -39,11 +39,10 @@ let start_server () =
         in
         Lwt.return_unit
       else
-        (* let msg = Bytes.sub (Bytes.create 1024) 0 len in *)
         let* _ =
           Lwt_io.(
             write_line stdout
-            @@ Printf.sprintf "Received message : %s"
+            @@ Printf.sprintf "message received\nReceived message : %s"
             @@ Bytes.to_string buffer)
         in
         handle_recv_client ()
@@ -62,8 +61,7 @@ let start_server () =
           handle_send_client ()
       | None -> handle_send_client ()
     in
-    Lwt.async handle_recv_client;
-    Lwt.async handle_send_client;
+    let* _ = handle_recv_client () <?> handle_send_client () in
     loop ()
   in
   loop ()
