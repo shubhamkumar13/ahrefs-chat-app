@@ -1,35 +1,50 @@
-# Prerequistes
+# Pre-requistes
 1. Install opam
     ```bash
     sudo apt install opam
     ```
 2. Create a switch for OCaml 4.14.0
     ```bash
-    opam init
+    opam init -y
     opam sw create 4.14.0
     eval $(opam env)
     ```
-3. Install the opam packages using the `opam_packages.export`
+4. Clone the repo 
     ```bash
+    git clone git@github.com:shubhamkumar13/ahrefs-chat-app.git
+    ```
+
+5. Install the opam packages using the `opam_packages.export`
+    ```bash
+    cd /path/to/ahrefs-chat-app
     opam sw import opam_packages.export
     ```
+    Clause : 
+        If there are errors while importing the packages where
+        compilation errors related to `conf-gmp` and `conf-libev` 
+        might cause an issue. Install `libgmp-dev libev-dev`
+        ```bash
+        sudo apt install libgmp-dev libev-dev
+        ```
+
 
 
 # How to use this app
 
-1. Clone the repo 
+1. Build the app
     ```bash
-    git clone git@github.com:shubhamkumar13/ahrefs-chat-app.git
-    ```
-2. Build the app
-    ```bash
+    cd /path/to/ahrefs-chat-app
     dune build @all
     ```
-3. To start the server 
+2. To start the server 
     ```bash
     _build/default/bin/server.exe
     ```
-4. To start the client (on a different terminal)
+3. To start the client (on a different terminal)
     ```bash
     _build/default/bin/client.exe
     ```
+
+## Things to do :
+- add configurations which allows port to manually be whatever
+- add roundtrip time
