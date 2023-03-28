@@ -19,7 +19,7 @@
 
 1. Clone the repo 
     ```bash
-    git clone git@github.com:shubhamkumar13/ahrehs-chat-app.git
+    git clone git@github.com:shubhamkumar13/ahrefs-chat-app.git
     ```
 2. Build the app
     ```bash
