@@ -2,8 +2,8 @@ open Lwt
 open Lwt.Syntax
 open Lwt.Infix
 
-let ack_len = Bytes.length @@ Bytes.of_string "message received"
-let ack = Bytes.create ack_len
+let ack = Bytes.of_string "message received"
+let ack_len = Bytes.length ack
 let port = 8080
 let client_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
@@ -24,7 +24,7 @@ let rec handle_send () =
       in
       let bytes_msg = Bytes.of_string msg in
       let* _ =
-        Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
+        Lwt_unix.write client_socket bytes_msg 0 (Bytes.length bytes_msg)
       in
       Lwt.pick [ handle_send (); handle_recv () ]
   | None -> Lwt.pick [ handle_send (); handle_recv () ]

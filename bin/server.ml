@@ -2,8 +2,8 @@ open Lwt
 open Lwt.Syntax
 open Lwt.Infix
 
-let ack_len = Bytes.length @@ Bytes.of_string "message received"
 let ack = Bytes.of_string "message received"
+let ack_len = Bytes.length ack
 let port = 8080
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
@@ -11,7 +11,8 @@ let rec server_addr () =
   match
     Lwt_unix.(bind server_socket @@ Unix.(ADDR_INET (inet_addr_any, port)))
   with
-  | exception _ -> Lwt_io.printf "The port %d is in use" port
+  | exception _ ->
+      Lwt_io.printf "The port %d is in use\n" port |> fun _ -> exit 1
   | _ -> Lwt.return_unit
 
 let rec handle_recv_client client_socket client_address =
