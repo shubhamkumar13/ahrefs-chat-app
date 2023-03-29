@@ -30,9 +30,9 @@ let rec handle_recv_client client_socket client_address =
         @@ Printf.sprintf "Received message : %s"
         @@ Bytes.to_string buffer)
     in
-    handle_recv_client client_socket client_address
+    handle_send_client client_socket client_address
 
-let rec handle_send_client client_socket client_address =
+and handle_send_client client_socket client_address =
   let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in
   let* input = Lwt_io.read_line_opt Lwt_io.stdin in
   match input with
@@ -44,8 +44,17 @@ let rec handle_send_client client_socket client_address =
       let* _ =
         Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
       in
-      handle_send_client client_socket client_address
-  | None -> handle_send_client client_socket client_address
+      Lwt.pick
+        [
+          handle_send_client client_socket client_address;
+          handle_recv_client client_socket client_address;
+        ]
+  | None ->
+      Lwt.pick
+        [
+          handle_send_client client_socket client_address;
+          handle_recv_client client_socket client_address;
+        ]
 
 let start_server () =
   let* _ = server_addr () in

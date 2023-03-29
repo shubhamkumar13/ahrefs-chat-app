@@ -20,8 +20,8 @@ let rec handle_send () =
       let* _ =
         Lwt_unix.send client_socket bytes_msg 0 (Bytes.length bytes_msg) []
       in
-      handle_send ()
-  | None -> handle_send ()
+      Lwt.pick [ handle_send (); handle_recv () ]
+  | None -> Lwt.pick [ handle_send (); handle_recv () ]
 
 and handle_recv () =
   let buffer = Bytes.create 1024 in
@@ -34,7 +34,7 @@ and handle_recv () =
         @@ Printf.sprintf "Received message: %s"
         @@ Bytes.to_string buffer)
     in
-    handle_recv ()
+    handle_send ()
 
 let start_client () =
   let* _ = client_addr () in
