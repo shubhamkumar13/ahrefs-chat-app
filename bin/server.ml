@@ -2,6 +2,8 @@ open Lwt
 open Lwt.Syntax
 open Lwt.Infix
 
+let ack_len = Bytes.length @@ Bytes.of_string "message received"
+let ack = Bytes.of_string "message received"
 let port = 8080
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
@@ -9,7 +11,7 @@ let rec server_addr () =
   match
     Lwt_unix.(bind server_socket @@ Unix.(ADDR_INET (inet_addr_any, port)))
   with
-  | exception _ -> server_addr ()
+  | exception _ -> Lwt_io.printf "The port %d is in use" port
   | _ -> Lwt.return_unit
 
 let rec handle_recv_client client_socket client_address =
@@ -30,7 +32,11 @@ let rec handle_recv_client client_socket client_address =
         @@ Printf.sprintf "Received message : %s"
         @@ Bytes.to_string buffer)
     in
-    handle_send_client client_socket client_address
+    Lwt.pick
+      [
+        handle_send_client client_socket client_address;
+        handle_recv_client client_socket client_address;
+      ]
 
 and handle_send_client client_socket client_address =
   let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in

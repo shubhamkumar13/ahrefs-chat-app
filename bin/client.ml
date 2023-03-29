@@ -2,11 +2,17 @@ open Lwt
 open Lwt.Syntax
 open Lwt.Infix
 
+let ack_len = Bytes.length @@ Bytes.of_string "message received"
+let ack = Bytes.create ack_len
 let port = 8080
 let client_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
 let client_addr () =
-  Lwt_unix.(connect client_socket @@ ADDR_INET (Unix.inet_addr_any, port))
+  match
+    Lwt_unix.(connect client_socket @@ ADDR_INET (Unix.inet_addr_any, port))
+  with
+  | exception _ -> Lwt_io.printf "Cannot connect to server at port : %d" port
+  | _ -> Lwt.return_unit
 
 let rec handle_send () =
   let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in
@@ -34,7 +40,7 @@ and handle_recv () =
         @@ Printf.sprintf "Received message: %s"
         @@ Bytes.to_string buffer)
     in
-    handle_send ()
+    Lwt.pick [ handle_send (); handle_recv () ]
 
 let start_client () =
   let* _ = client_addr () in

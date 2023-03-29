@@ -45,3 +45,6 @@
 ## Things to do :
 - add configurations which allows port to manually be whatever
 - add roundtrip time
+
+## Unimportant but would be cool :
+- if the server cannot connect to a port try another port or kill the port
