@@ -86,7 +86,8 @@ and handle_recv_client client_socket client_address =
         let* _ =
           Lwt_io.(
             write_line stdout
-            @@ Printf.sprintf "Received message : %s\nRoundtrip : %f" buffer
+            @@ Printf.sprintf "Received message : %s\nRoundtrip : %f secs"
+                 buffer
                  (!server_trip.end_time -. !server_trip.start_time))
         in
 

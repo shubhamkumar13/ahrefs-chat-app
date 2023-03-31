@@ -66,7 +66,7 @@ and handle_recv () =
         let* _ =
           Lwt_io.(
             write_line stdout
-            @@ Printf.sprintf "Received message: %s\nRoundtrip :%f secs" buffer
+            @@ Printf.sprintf "Received message: %s\nRoundtrip : %f secs" buffer
             @@ (!client_trip.end_time -. !client_trip.start_time))
         in
         client_trip := init_trip ();
