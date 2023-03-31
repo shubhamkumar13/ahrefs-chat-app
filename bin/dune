@@ -10,6 +10,6 @@
  (public_name clientapp)
  (name client)
  (modules client)
- (libraries unix lwt lwt.unix)
+ (libraries unix lwt lwt.unix chatlib)
  (flags
   (-w -26)))
