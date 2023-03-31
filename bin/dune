@@ -2,7 +2,7 @@
  (public_name serverapp)
  (name server)
  (modules server)
- (libraries unix lwt lwt.unix)
+ (libraries unix lwt lwt.unix chatlib)
  (flags
   (-w -33)))
 
