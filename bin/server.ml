@@ -5,7 +5,14 @@ module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
 
 let server_trip = ref @@ Util.init_trip ()
-let port = 8080
+
+let port =
+  try
+    match int_of_string Sys.argv.(1) with
+    | x when x > 1024 && x < 49152 -> x
+    | _ -> failwith "Port number not in the valid range"
+  with _ -> failwith "Please enter a valid port number"
+
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
 let rec server_addr () =
@@ -101,11 +108,7 @@ let start_server () =
   in
   let rec loop () =
     let* client_socket, client_addr = Lwt_unix.accept server_socket in
-    let client_address =
-      match client_addr with
-      | ADDR_INET (i, _) -> Unix.string_of_inet_addr i
-      | ADDR_UNIX s -> s
-    in
+    let client_address = Util.sockaddr_to_string client_addr in
     let* _ =
       Lwt_io.(
         write_line stdout

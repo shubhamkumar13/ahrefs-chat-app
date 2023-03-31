@@ -1,3 +1,5 @@
+open Lwt
+
 module Bytes = struct
   include Bytes
 
@@ -21,3 +23,13 @@ let update_trip trip start_time end_time =
 
 let ack = Bytes.of_string "message received"
 let ack_len = Bytes.length ack
+
+let sockaddr_to_string (sockaddr : Unix.sockaddr) : string =
+  match sockaddr with
+  | ADDR_INET (i, _) -> Unix.string_of_inet_addr i
+  | ADDR_UNIX s -> s
+
+module Infix = struct
+  let ( <<! ) f x = ignore_result (f x)
+  let ( <! ) f x = ignore (f x)
+end
