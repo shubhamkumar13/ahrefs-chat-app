@@ -1,22 +1,6 @@
-; (executable
-;  (public_name serverapp)
-;  (name server)
-;  (modules server)
-;  (libraries unix lwt lwt.unix chatlib)
-;  (flags
-;   (-w -33)))
-
-; (executable
-;  (public_name clientapp)
-;  (name client)
-;  (modules client)
-;  (libraries unix lwt lwt.unix chatlib)
-;  (flags
-;   (-w -26)))
-
 (executable
  (name main)
  (public_name main)
- (libraries unix lwt lwt.unix chatlib)
- (modules main server client)
+ (libraries unix lwt lwt.unix chatlib server client)
+ (modules main)
  (flags -w -33))

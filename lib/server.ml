@@ -1,5 +1,3 @@
-open Lwt
-open Lwt.Syntax
 open Lwt.Infix
 module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
@@ -14,7 +12,10 @@ module Bytes = Chatlib.Util.Bytes
 let server_trip = ref @@ Util.init_trip ()
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
-let rec server_addr port =
+(* only for testing please delete before submission *)
+let f () = "hello"
+
+let server_addr port =
   (* check and handle error gracefully *)
   Lwt_unix.handle_unix_error
     Lwt_unix.(bind server_socket)

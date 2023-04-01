@@ -1,2 +1,4 @@
 (test
- (name chatapp))
+ (name chat_test)
+ (modules chat_test)
+ (libraries lwt lwt.unix unix alcotest alcotest-lwt chatlib server client))

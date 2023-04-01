@@ -1,4 +1,14 @@
 (library
  (name chatlib)
  (modules util)
- (libraries lwt lwt.unix))
+ (libraries unix lwt lwt.unix))
+
+(library
+ (name server)
+ (modules server)
+ (libraries unix lwt lwt.unix chatlib))
+
+(library
+ (name client)
+ (modules client)
+ (libraries unix lwt lwt.unix chatlib))

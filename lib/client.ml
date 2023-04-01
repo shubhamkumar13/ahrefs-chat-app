@@ -1,5 +1,3 @@
-open Lwt
-open Lwt.Syntax
 open Lwt.Infix
 module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
