@@ -1,5 +1,3 @@
-open Lwt
-
 module Bytes = struct
   include Bytes
 
@@ -12,6 +10,7 @@ module Bytes = struct
     filter is_filled_byte byte_seq
 end
 
+(* roundtrip record *)
 type trip = { mutable start_time : float; mutable end_time : float }
 
 let init_trip () = { start_time = 0.; end_time = 0. }

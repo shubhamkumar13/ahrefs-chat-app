@@ -4,27 +4,20 @@ open Lwt.Infix
 module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
 
+(* Usage of Lwt.choose :
+    There are places in the code where Lwt.choose is used,
+    this is to help establish a non-blocking way of making sure
+    both types of handlers - send and receive work in the background
+    and when they are resolved they get a chance to generate result
+*)
+
 let server_trip = ref @@ Util.init_trip ()
-
-let port =
-  try
-    match int_of_string Sys.argv.(1) with
-    | x when x > 1024 && x < 49152 -> x
-    | _ -> failwith "Port number not in the valid range"
-  with _ -> failwith "Please enter a valid port number"
-
 let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
-let rec server_addr () =
-  match
-    Lwt_unix.(bind server_socket @@ Unix.(ADDR_INET (inet_addr_any, port)))
-  with
-  | exception _ ->
-      Lwt_io.printf
-        "The port %d is in use\n, please wait for the port to be free" port
-      |> fun _ ->
-      Lwt_unix.close server_socket >>= fun _ -> server_addr ()
-  | _ -> Lwt.return_unit
+let rec server_addr port =
+  Lwt_unix.handle_unix_error
+    Lwt_unix.(bind server_socket)
+    Unix.(ADDR_INET (inet_addr_any, port))
 
 let rec handle_send_client client_socket client_address =
   let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in
@@ -41,13 +34,13 @@ let rec handle_send_client client_socket client_address =
       server_trip :=
         Util.update_trip !server_trip (Unix.gettimeofday ())
           !server_trip.end_time;
-      Lwt.pick
+      Lwt.choose
         [
           handle_send_client client_socket client_address;
           handle_recv_client client_socket client_address;
         ]
   | None ->
-      Lwt.pick
+      Lwt.choose
         [
           handle_send_client client_socket client_address;
           handle_recv_client client_socket client_address;
@@ -80,7 +73,7 @@ and handle_recv_client client_socket client_address =
         in
 
         server_trip := Util.init_trip ();
-        Lwt.pick
+        Lwt.choose
           [
             handle_send_client client_socket client_address;
             handle_recv_client client_socket client_address;
@@ -93,14 +86,14 @@ and handle_recv_client client_socket client_address =
         in
         server_trip := Util.init_trip ();
 
-        Lwt.pick
+        Lwt.choose
           [
             handle_send_client client_socket client_address;
             handle_recv_client client_socket client_address;
           ]
 
-let start_server () =
-  let* _ = server_addr () in
+let start_server port =
+  let* _ = server_addr port in
   let _ = Lwt_unix.listen server_socket 10 in
   let* _ =
     Lwt_io.(
@@ -122,11 +115,10 @@ let start_server () =
             handle_recv_client client_socket client_address;
           ]
       with
-      | exception _ -> Lwt.return_unit
       | _ -> Lwt.return_unit
     in
     loop ()
   in
   loop ()
 
-let _ = Lwt_main.run @@ start_server ()
+let main port = Lwt_main.run @@ start_server port
