@@ -22,18 +22,16 @@ let client_addr port =
   | _ -> Lwt.return_unit
 
 let rec handle_send () =
-  let* _ = Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") in
-  let* input = Lwt_io.read_line_opt Lwt_io.stdin in
+  Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") >>= fun _ ->
+  Lwt_io.read_line_opt Lwt_io.stdin >>= fun input ->
   match input with
   | Some msg ->
-      let* _ =
-        Lwt_io.(write_line stdout @@ Printf.sprintf "Sending message : %s" msg)
-      in
       let bytes_msg = Bytes.of_string msg in
+      Lwt_io.(write_line stdout @@ Printf.sprintf "Sending message : %s" msg)
+      >>= fun _ ->
       (* send data as bytes to the server *)
-      let* _ =
-        Lwt_unix.write client_socket bytes_msg 0 (Bytes.length bytes_msg)
-      in
+      Lwt_unix.write client_socket bytes_msg 0 (Bytes.length bytes_msg)
+      >>= fun _ ->
       (* initialize start time *)
       client_trip :=
         Util.update_trip !client_trip (Unix.gettimeofday ())
@@ -44,7 +42,7 @@ let rec handle_send () =
 and handle_recv () =
   let buffer = Bytes.create 1024 in
   (* receive data as bytes from the server *)
-  let* len = Lwt_unix.read client_socket buffer 0 1024 in
+  Lwt_unix.read client_socket buffer 0 1024 >>= fun len ->
   (* initialize end time *)
   client_trip :=
     Util.update_trip !client_trip !client_trip.start_time
@@ -56,29 +54,26 @@ and handle_recv () =
     (* check if it is an acknowledgement or data sent from the server *)
     match buffer with
     | "message received" ->
-        let* _ =
-          Lwt_io.(
-            write_line stdout
-            @@ Printf.sprintf "Received message: %s\nRoundtrip : %f secs" buffer
-            @@ (!client_trip.end_time -. !client_trip.start_time))
-        in
+        Lwt_io.(
+          write_line stdout
+          @@ Printf.sprintf "Received message: %s\nRoundtrip : %f secs" buffer
+          @@ (!client_trip.end_time -. !client_trip.start_time))
+        >>= fun _ ->
         client_trip := Util.init_trip ();
         Lwt.choose [ handle_send (); handle_recv () ]
     | _ ->
-        let* _ = Lwt_unix.write client_socket Util.ack 0 Util.ack_len in
-        let* _ =
-          Lwt_io.(
-            write_line stdout @@ Printf.sprintf "Received message: %s" buffer)
-        in
+        Lwt_unix.write client_socket Util.ack 0 Util.ack_len >>= fun _ ->
+        Lwt_io.(
+          write_line stdout @@ Printf.sprintf "Received message: %s" buffer)
+        >>= fun _ ->
         (* re-initialize the value for the next trip *)
         client_trip := Util.init_trip ();
         Lwt.choose [ handle_send (); handle_recv () ]
 
 let start_client port =
-  let* _ = client_addr port in
+  client_addr port >>= fun _ ->
   let rec loop () =
-    let* _ = Lwt.choose [ handle_recv (); handle_send () ] in
-    loop ()
+    Lwt.choose [ handle_recv (); handle_send () ] >>= fun _ -> loop ()
   in
   loop ()
 
