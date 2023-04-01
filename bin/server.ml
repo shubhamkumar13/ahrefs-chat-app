@@ -104,6 +104,7 @@ let start_server port =
       write_line stdout @@ Printf.sprintf "Client connected : %s" client_address)
     >>= fun _ ->
     (match
+       (* wait for promise resolution *)
        Lwt.choose
          [
            handle_send_client client_socket client_address;

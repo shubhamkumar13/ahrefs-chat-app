@@ -73,6 +73,7 @@ and handle_recv () =
 let start_client port =
   client_addr port >>= fun _ ->
   let rec loop () =
+    (* wait for promise resolution *)
     Lwt.choose [ handle_recv (); handle_send () ] >>= fun _ -> loop ()
   in
   loop ()
