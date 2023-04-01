@@ -21,8 +21,7 @@
     ```
     N.B. : 
         If there are errors while importing the packages where
-        compilation errors related to `conf-gmp` and `conf-libev` 
-        occur. Run the following commands
+        related to `conf-gmp` and `conf-libev` run the following commands
 
         sudo apt install libgmp-dev libev-dev
 
@@ -33,11 +32,57 @@
     cd /path/to/ahrefs-chat-app
     dune build @all
     ```
-2. To start the server 
-    ```bash
-    _build/default/bin/server.exe
-    ```
-3. To start the client (on a different terminal)
-    ```bash
-    _build/default/bin/client.exe
-    ```
+2. To start a server
+   1. `dune exec main`
+   2. as soon as you execute the above command 
+      you should see a prompt as shown below
+      <!-- ![prompt](media/first_page.png) -->
+      ```bash
+      ❯ dune exec main
+        Choose which port you want to run your application in
+
+        {Please make sure that the port selected
+        should be same for server and client, thank you} :
+
+                     =>
+       ```
+      type in the port number that you want,
+      do remember that the port for server and client
+      should be same.
+   3. Let's choose `8080` and press enter, this would bring you down
+      to the next option menu as shown below
+      <!-- ![prompt](media/second_page.png) -->
+      ```bash
+      ❯ dune exec main
+        Choose which port you want to run your application in
+
+            {Please make sure that the port selected
+            should be same for server and client, thank you} :
+
+                    => 8080
+        Choose which application you want to run :
+
+            1. For running a server choose 1
+
+            2. For running a client choose 2
+
+                    => 
+      ```
+   4. Now if you haven't started a server choosing 
+      option 2 would end up with refusal of connection.
+      So choose 1, by typing 1 press enter after `=> 1`.
+      You will se a prompt :
+      `Waiting for socket connection :`
+      which would change to :
+      ```bash
+        Waiting for socket connection :
+        Client connected : 127.0.0.1
+        Enter message :
+      ```
+   5. For choosing to run a client enter `=> 2`
+      This will show the following prompt
+      ```bash
+      Enter message :
+
+      ```
+      now you can send and receive messages from client and server. Fin.

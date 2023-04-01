@@ -1,6 +1,11 @@
 module Server = Server
 module Client = Client
 
+(**
+  main.ml orchestrates client.ml and server.ml
+  this is file the user will interact with
+*)
+
 let _ =
   Printf.printf
     "Choose which port you want to run your application in \n\n\
@@ -23,7 +28,8 @@ let _ =
   Printf.printf
     "Choose which application you want to run :\n\n\
     \     1. For running a server choose 1\n\n\
-    \     2. For running a client choose 2\n";
+    \     2. For running a client choose 2\n\n\
+    \    \t\t => ";
   match Stdlib.read_line () |> int_of_string_opt with
   | Some 1 -> Server.main @@ port
   | Some 2 -> Client.main @@ port
