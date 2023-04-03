@@ -1,6 +1,8 @@
 open Lwt.Infix
-module Util = Chatlib.Util
-module Bytes = Chatlib.Util.Bytes
+open Lwt.Syntax
+module Util = Util
+module Bytes = Util.Bytes
+module Socket = Util.Socket
 
 (* Usage of Lwt.choose :
     There are places in the code where Lwt.choose is used,
@@ -10,16 +12,22 @@ module Bytes = Chatlib.Util.Bytes
 *)
 
 let server_trip = ref @@ Util.init_trip ()
-let server_socket = Lwt_unix.(socket PF_INET SOCK_STREAM 0)
 
 (* only for testing please delete before submission *)
 let f () = "hello"
 
-let server_addr port =
-  (* check and handle error gracefully *)
-  Lwt_unix.handle_unix_error
-    Lwt_unix.(bind server_socket)
-    Unix.(ADDR_INET (inet_addr_any, port))
+let create_socket host port =
+  let open Lwt_unix in
+  let create () =
+    let socket = Socket.create () in
+    let* sockaddr = Socket.get_addr host port in
+    setsockopt socket SO_REUSEADDR true;
+    setsockopt_optint socket SO_LINGER (Some 5);
+    bind socket sockaddr >>= fun _ ->
+    listen socket 1;
+    Lwt.return socket
+  in
+  handle_unix_error create ()
 
 let rec handle_send_client client_socket client_address =
   Lwt_io.(write_line stdout @@ Printf.sprintf "Enter message : ") >>= fun _ ->
@@ -92,15 +100,14 @@ and handle_recv_client client_socket client_address =
             handle_recv_client client_socket client_address;
           ]
 
-let start_server port =
-  server_addr port >>= fun _ ->
-  Lwt_unix.listen server_socket 10 |> fun _ ->
+let start_server host port =
+  let* socket = create_socket host port in
   Lwt_io.(write_line stdout @@ Printf.sprintf "Waiting for socket connection :")
   >>= fun _ ->
   let rec loop () =
-    Lwt_unix.accept server_socket >>= fun (client_socket, client_addr) ->
+    Lwt_unix.accept socket >>= fun (client_socket, client_addr) ->
     (* sockaddr -> string *)
-    let client_address = Util.sockaddr_to_string client_addr in
+    let client_address = Socket.addr_to_string client_addr in
     Lwt_io.(
       write_line stdout @@ Printf.sprintf "Client connected : %s" client_address)
     >>= fun _ ->
@@ -117,4 +124,4 @@ let start_server port =
   in
   loop ()
 
-let main port = Lwt_main.run @@ start_server port
+let main host port = Lwt_main.run @@ start_server host port

@@ -1,14 +1,16 @@
 (library
- (name chatlib)
+ (name util)
  (modules util)
- (libraries unix lwt lwt.unix))
+ (libraries unix lwt lwt.unix)
+ (flags
+  (:standard -w -33)))
 
 (library
  (name server)
  (modules server)
- (libraries unix lwt lwt.unix chatlib))
+ (libraries unix lwt lwt.unix util))
 
 (library
  (name client)
  (modules client)
- (libraries unix lwt lwt.unix chatlib))
+ (libraries unix lwt lwt.unix util))

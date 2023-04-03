@@ -1,5 +1,6 @@
 module Server = Server
 module Client = Client
+open Lwt.Syntax
 
 (**
   main.ml orchestrates client.ml and server.ml
@@ -7,6 +8,7 @@ module Client = Client
 *)
 
 let _ =
+  let host = "127.0.0.1" in
   Printf.printf
     "Choose which port you want to run your application in \n\n\
     \     {Please make sure that the port selected \n\
@@ -17,8 +19,8 @@ let _ =
       match int_of_string_opt @@ Stdlib.read_line () with
       | None ->
           Printf.printf "No port selected, choosing 8080 as the default port";
-          8080
-      | Some p when p >= 1024 && p <= 49162 -> p
+          "8080"
+      | Some p when p >= 1024 && p <= 49162 -> string_of_int p
       | Some _ -> failwith "Wrong port selected"
     with _ ->
       failwith
@@ -31,6 +33,6 @@ let _ =
     \     2. For running a client choose 2\n\n\
     \    \t\t => ";
   match Stdlib.read_line () |> int_of_string_opt with
-  | Some 1 -> Server.main port
-  | Some 2 -> Client.main port
+  | Some 1 -> Server.main host port
+  | Some 2 -> Client.main host port
   | _ -> failwith "Option doesn't exist, please try again"
