@@ -55,20 +55,7 @@ let create_server_socket host port =
   | _ -> Lwt.return_unit)
   >>= fun _ -> Lwt.return (socket, sockaddr)
 
-let rec send_handler socket =
-  Lwt_io.printl "Enter message : " >>= fun _ ->
-  Lwt_io.(read_line_opt stdin) >>= fun input ->
-  match input with
-  | Some msg ->
-      let bytes_msg = Bytes.of_string msg in
-      let bytes_len = Bytes.length bytes_msg in
-      Lwt_io.printf "Sending message : %s\n" msg >>= fun _ ->
-      Lwt_unix.write socket bytes_msg 0 bytes_len >>= fun _ ->
-      set_rtt ();
-      send_handler socket
-  | None -> Lwt.return_unit
-
-let rec client_recv_handler socket =
+let read_from socket =
   let buffer = Bytes.create 1024 in
   let* len = Lwt_unix.read socket buffer 0 1024 in
   calc_rtt ();
@@ -78,6 +65,25 @@ let rec client_recv_handler socket =
       filter_unfilled_bytes buffer empty_byte
       |> to_string |> String.lowercase_ascii)
   in
+  Lwt.return (len, buffer, !rtt)
+
+let write_to socket msg =
+  let bytes_msg = Bytes.of_string msg in
+  let bytes_len = Bytes.length bytes_msg in
+  Lwt_unix.write socket bytes_msg 0 bytes_len >>= fun _ ->
+  set_rtt () |> Lwt.return
+
+let rec send_handler socket =
+  Lwt_io.printl "Enter message : " >>= fun _ ->
+  Lwt_io.(read_line_opt stdin) >>= fun input ->
+  match input with
+  | Some msg ->
+      Lwt_io.printf "Sending message : %s\n" msg >>= fun _ ->
+      write_to socket msg >>= fun _ -> send_handler socket
+  | None -> Lwt.return_unit
+
+let rec client_recv_handler socket =
+  let* len, buffer, rtt = read_from socket in
   match len with
   | 0 ->
       Lwt_unix.close socket >>= fun _ ->
@@ -86,7 +92,7 @@ let rec client_recv_handler socket =
       Lwt.catch
         (fun () ->
           if buffer = ack then (
-            Lwt_io.printf "Received message : %s\nRountrip Time : %f\n" ack !rtt
+            Lwt_io.printf "Received message : %s\nRountrip Time : %f\n" ack rtt
             >>= fun _ ->
             reset_rtt ();
             Lwt.pick [ client_recv_handler socket; send_handler socket ])
@@ -99,15 +105,7 @@ let rec client_recv_handler socket =
           Lwt_io.printl "Server disconnected" >>= fun _ -> Lwt.return_unit)
 
 let rec server_recv_handler socket =
-  let buffer = Bytes.create 1024 in
-  let* len = Lwt_unix.read socket buffer 0 1024 in
-  calc_rtt ();
-  let empty_byte = '\000' in
-  let buffer =
-    Bytes.(
-      filter_unfilled_bytes buffer empty_byte
-      |> to_string |> String.lowercase_ascii)
-  in
+  let* len, buffer, rtt = read_from socket in
   match len with
   | 0 ->
       Lwt_unix.close socket >>= fun _ ->
@@ -116,7 +114,7 @@ let rec server_recv_handler socket =
       Lwt.catch
         (fun () ->
           if buffer = ack then (
-            Lwt_io.printf "Received message : %s\nRountrip Time : %f\n" ack !rtt
+            Lwt_io.printf "Received message : %s\nRountrip Time : %f\n" ack rtt
             >>= fun _ ->
             reset_rtt ();
             Lwt.pick [ server_recv_handler socket; send_handler socket ])

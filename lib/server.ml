@@ -3,8 +3,6 @@ open Lwt.Syntax
 module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
 
-let f () = "hello"
-
 let start_server host port =
   let* server_socket, _ = Util.create_server_socket host port in
   Lwt_unix.listen server_socket 10;
