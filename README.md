@@ -36,7 +36,6 @@
    1. `dune exec main`
    2. as soon as you execute the above command 
       you should see a prompt as shown below
-      <!-- ![prompt](media/first_page.png) -->
       ```bash
       ❯ dune exec main
         Choose which port you want to run your application in
@@ -50,8 +49,8 @@
       do remember that the port for server and client
       should be same.
    3. Let's choose `8080` and press enter, this would bring you down
-      to the next option menu as shown below
-      <!-- ![prompt](media/second_page.png) -->
+      to the next option menu as shown below.
+      (If you don't choose anything 8080 is the default port)
       ```bash
       ❯ dune exec main
         Choose which port you want to run your application in
@@ -70,7 +69,7 @@
       ```
    4. Now if you haven't started a server choosing 
       option 2 would end up with refusal of connection.
-      So choose 1, by typing 1 press enter after `=> 1`.
+      So choose 1, by typing 1.
       You will se a prompt :
       `Waiting for socket connection :`
       which would change to :
@@ -79,7 +78,7 @@
         Client connected : 127.0.0.1
         Enter message :
       ```
-   5. For choosing to run a client enter `=> 2`
+   5. For choosing to run a client choose option 2
       This will show the following prompt
       ```bash
       Enter message :

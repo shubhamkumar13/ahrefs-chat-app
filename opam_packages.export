@@ -12,6 +12,8 @@ roots: [
   "opium.0.20.0"
 ]
 installed: [
+  "alcotest.1.6.0"
+  "alcotest-lwt.1.6.0"
   "angstrom.0.15.0"
   "asn1-combinators.0.2.6"
   "astring.0.8.5"
