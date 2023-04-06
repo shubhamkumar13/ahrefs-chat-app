@@ -3,16 +3,7 @@ open Lwt.Syntax
 module Util = Chatlib.Util
 module Bytes = Chatlib.Util.Bytes
 
-(* Usage of Lwt.choose :
-    There are places in the code where Lwt.choose is used,
-    this is to help establish a non-blocking way of making sure
-    both types of handlers - send and receive work in the background
-    and when they are resolved they get a chance to generate result
-*)
-
 let f () = "hello"
-
-(* let server_trip = ref @@ Util.init_trip () *)
 
 let start_server host port =
   let* server_socket, _ = Util.create_server_socket host port in
